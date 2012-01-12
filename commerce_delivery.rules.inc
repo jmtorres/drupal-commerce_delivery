@@ -143,7 +143,8 @@ function commerce_delivery_rules_condition_info() {
         'description' => 'Select status (multiple allowed).',
         'restriction' => 'input',
       ),
-    ), 
+    ),
+    'group' => t('Delivery'),
   );
 
   return $conditions;
