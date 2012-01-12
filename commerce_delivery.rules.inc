@@ -129,6 +129,22 @@ function commerce_delivery_rules_condition_info() {
     ),
     'group' => t('Delivery'),
   );
+  $conditions['commerce_delivery_has_status'] = array(
+    'label' => t('Delivery has status'),
+    'parameter' => array(
+      'delivery' => array(
+        'type' => 'commerce_delivery',
+        'label' => t('Delivery'),
+      ),
+      'status' => array(
+        'type' => 'list<text>',
+        'label' => t('Delivery status'),
+        'options list' => 'commerce_delivery_get_status',
+        'description' => 'Select status (multiple allowed).',
+        'restriction' => 'input',
+      ),
+    ), 
+  );
 
   return $conditions;
 }
@@ -197,6 +213,13 @@ function commerce_delivery_active_delivery_exists($order) {
   // getting this order deliveries.
   $deliveries = commerce_delivery_get_deliveries($order->order_id, 'active');
   if (count($deliveries) > 0) {
+    return TRUE;
+  }
+  return FALSE;
+}
+
+function commerce_delivery_has_status($delivery, $status_list){
+  if (in_array($delivery->status, $status_list)) {
     return TRUE;
   }
   return FALSE;
