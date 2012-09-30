@@ -281,13 +281,13 @@ function commerce_delivery_field_extra_fields() {
  */
 function commerce_delivery_by_order_view($order) {
   $destination = drupal_get_destination();
-  $views->content = '<ul class="action-links"><li>';
-  $views->content .= l(t('Add delivery'), 'admin/commerce/deliveries/add/' . $order->order_id,
+  $output = '<ul class="action-links"><li>';
+  $output .= l(t('Add delivery'), 'admin/commerce/deliveries/add/' . $order->order_id,
                         array('query' => $destination));
 
-  $views->content .= '</li></ul>';
-  $views->content .= views_embed_view('commerce_delivery_by_order', 'default', $order->order_id);
-  return $views->content;
+  $output .= '</li></ul>';
+  $output .= views_embed_view('commerce_delivery_by_order', 'default', $order->order_id);
+  return $output;
 }
 
 /**
