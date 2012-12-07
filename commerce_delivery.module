@@ -37,6 +37,7 @@ function commerce_delivery_entity_info() {
     'commerce_delivery' => array(
       'label' => t('Commerce Delivery'),
       'controller class' => 'CommerceDeliveryEntityController',
+      'metadata controller class' => '',
       'base table' => 'commerce_delivery',
       'uri callback' => 'commerce_delivery_uri',
       'fieldable' => TRUE,
@@ -205,10 +206,18 @@ function commerce_delivery_menu() {
     'weight' => 10,
     'type' => MENU_CALLBACK,
   );
-  $items['admin/commerce/deliveries/%commerce_delivery'] = array(
+ $items['admin/commerce/deliveries/%commerce_delivery'] = array(
+    'title' => 'View Delivery',
+    'page callback' => 'commerce_delivery_delivery_view',
     'page arguments' => array(3),
     'access arguments' => array('commerce_delivery_administer_deliveries'),
     'weight' => -10,
+  );
+  $items['admin/commerce/deliveries/%commerce_delivery/view'] = array(
+    'title' => 'View',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+    'context' => MENU_CONTEXT_PAGE | MENU_CONTEXT_INLINE,
   );
   $items['admin/commerce/deliveries/%commerce_delivery/edit'] = array(
     'title' => 'Edit',
@@ -231,6 +240,18 @@ function commerce_delivery_menu() {
 
   return $items;
 }
+
+function commerce_delivery_delivery_view($delivery, $view_mode = 'full', $breadcrumb = TRUE) {
+  // Set the breadcrumb for the appropriate view mode if specified.
+  if ($breadcrumb) {
+//    commerce_order_ui_set_breadcrumb();
+  }
+
+//  drupal_add_css(drupal_get_path('module', 'commerce_order') . '/theme/commerce_order.theme.css');
+
+  return entity_view('commerce_delivery', array($delivery->delivery_id => $delivery), $view_mode, NULL, TRUE);
+}
+
 
 /**
  * Implements hook_field_extra_fields().
