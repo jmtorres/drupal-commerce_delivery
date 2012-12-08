@@ -49,8 +49,8 @@ function commerce_delivery_views_data() {
 
   // Expose the delivery id.
   $data['commerce_delivery']['delivery_id'] = array(
-    'title' => t('Delivery id'),
-    'help' => t('The delive id.'),
+    'title' => t('Delivery ID'),
+    'help' => t('The unique internal identifier of the delivery.'),
     'field' => array(
       'handler' => 'views_handler_field',
       'click sortable' => TRUE,
