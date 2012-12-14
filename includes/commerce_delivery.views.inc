@@ -21,10 +21,10 @@ function commerce_delivery_views_data() {
 
   // Expose the order ID.
   $data['commerce_delivery']['order_id'] = array(
-    'title' => t('Order ID'),
-    'help' => t('The unique internal identifier of the order.'),
+    'title' => t('Order ID', array(), array('context' => 'a drupal commerce order')),
+    'help' => t('The unique internal identifier of the associated order.'),
     'field' => array(
-      'handler' => 'views_handler_field',
+      'handler' => 'commerce_order_handler_field_order',
       'click sortable' => TRUE,
     ),
     'filter' => array(
@@ -34,16 +34,16 @@ function commerce_delivery_views_data() {
       'handler' => 'views_handler_sort',
     ),
     'argument' => array(
-      'handler' => 'views_handler_argument_numeric',
+      'handler' => 'commerce_order_handler_argument_order_order_id',
       'name field' => 'order_number',
       'numeric' => TRUE,
       'validate type' => 'order_id',
     ),
     'relationship' => array(
-       'base' => 'commerce_order',
-       'field' => 'order_id',
-       'handler' => 'views_handler_relationship',
-       'label' => t('Order ID'),
+      'handler' => 'views_handler_relationship',
+      'base' => 'commerce_order',
+      'field' => 'order_id',
+      'label' => t('Order', array(), array('context' => 'a drupal commerce order')),
     ),
   );
 
@@ -158,3 +158,24 @@ function commerce_delivery_views_data() {
 
 }
 
+/**
+ * Implements hook_views_data_alter()
+ */
+function commerce_delivery_views_data_alter(&$data) {
+  // Define the relationship from commerce_order to commerce_delivery.
+  $data['commerce_order']['table']['join']['commerce_delivery'] = array(
+      'left_field' => 'order_id',
+      'field' => 'order_id',
+  );
+
+  $data['commerce_order']['commerce_delivery']['relationship'] = array(
+      'title' => t('Delivery'),
+      'help' => t("Relate this order to its deliveries. This relationship will cause duplicated records if there are multiple deliveries per order."),
+      'handler' => 'views_handler_relationship',
+      'base' => 'commerce_delivery',
+      'base field' => 'order_id',
+      'field' => 'order_id',
+      'label' => t('Delivery', array(), array('context' => 'a drupal commerce delivery')),
+  );
+
+}
