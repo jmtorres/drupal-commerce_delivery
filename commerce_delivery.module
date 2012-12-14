@@ -9,7 +9,7 @@
  * Implements hook_permission().
  */
 function commerce_delivery_permission() {
-  $permissions = array(
+  $permissions = commerce_entity_access_permissions('commerce_delivery') + array(
     'commerce_delivery_administer_deliveries' => array(
       'title' => t('Adminster deliveries'),
       'description' => t('Allows users to administer deliveries.'),
@@ -70,10 +70,42 @@ function commerce_delivery_entity_info() {
       'creation callback' => 'commerce_delivery_new',
       'save callback' => 'commerce_delivery_save',
       'deletion callback' => 'commerce_delivery_delete',
+      'access callback' => 'commerce_entity_access',
+      'access arguments' => array(
+        'user key' => 'uid',
+        'access tag' => 'commerce_delivery_access',
+      ),
+      'permission labels' => array(
+        'singular' => t('delivery'),
+        'plural' => t('deliveries'),
+      ),
     ),
   );
   return $return;
 }
+
+/**
+ * Checks order access for various operations.
+ *
+ * @param $op
+ *   The operation being performed. One of 'view', 'update', 'create' or
+ *   'delete'.
+ * @param $order
+ *   Optionally an order to check access for.
+ * @param $account
+ *   The user to check for. Leave it to NULL to check for the current user.
+ */
+function commerce_delivery_access($op, $delivery = NULL, $account = NULL) {
+  return commerce_entity_access($op, $delivery, $account, 'commerce_delivery');
+}
+
+/**
+ * Implementation of hook_query_commerce_order_access_alter().
+ */
+function commerce_delivery_query_commerce_delivery_access_alter(QueryAlterableInterface $query) {
+  commerce_entity_access_query_alter($query, 'commerce_delivery');
+}
+
 
 /**
  * Callback returning delivery url.
