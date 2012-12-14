@@ -252,6 +252,24 @@ function commerce_delivery_rules_action_info() {
     ),
     'group' => t('Commerce Line Item'),
   );
+  $actions['commerce_delivery_update_status'] = array(
+    'label' => t('Update the delivery status'),
+    'parameter' => array(
+      'commerce_delivery' => array(
+        'type' => 'commerce_delivery',
+        'label' => t('Delivery to update'),
+      ),
+      'delivery_status' => array(
+        'type' => 'text',
+        'label' => t('Delivery status'),
+        'options list' => 'commerce_delivery_get_status',
+      ),
+    ),
+    'group' => t('Commerce Delivery'),
+    'callbacks' => array(
+      'execute' => 'commerce_delivery_rules_update_status',
+    ),
+  );
   return $actions;
 }
 
@@ -290,3 +308,9 @@ function commerce_delivery_assign_orphans($delivery) {
   }
 }
 
+function commerce_delivery_rules_update_status($delivery, $status){
+  if($delivery->status != $status){
+    $delivery->status = $status;
+    commerce_delivery_save($delivery);
+  }
+}
