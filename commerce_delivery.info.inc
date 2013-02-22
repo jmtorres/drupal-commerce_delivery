@@ -24,7 +24,7 @@ function commerce_delivery_entity_property_info() {
     'label' => t('Order ID', array(), array('context' => 'a drupal commerce delivery')),
     'description' => t('The Order ID which the delivery belongs to.'),
     'setter callback' => 'entity_property_verbatim_set',
-    'type' => 'integer',
+    'type' => 'commerce_order',
     'required' => TRUE,
     'schema field' => 'order_id',
   );
