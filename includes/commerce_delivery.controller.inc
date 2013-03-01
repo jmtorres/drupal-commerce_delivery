@@ -5,7 +5,7 @@
  * Delivery entity controller
  */
 
-class CommerceDeliveryEntityController extends EntityAPIController {
+class CommerceDeliveryEntityController extends DrupalCommerceEntityController {
 
   /**
    * Create a default delivery.
@@ -20,6 +20,7 @@ class CommerceDeliveryEntityController extends EntityAPIController {
    */
   public function create(array $values = array()) {
     $values += array(
+      'type' => 'commerce_delivery',
       'delivery_id' => '',
       'order_id' => 0,
       'status' => 0,
