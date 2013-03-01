@@ -119,9 +119,9 @@ function commerce_delivery_uri($delivery) {
  */
 function commerce_delivery_new($order_id = 0, $status = 0, $type = 'commerce_delivery') {
   return entity_get_controller('commerce_delivery')->create(array(
-  'type' => $type,
-  'order_id' => $order_id,
-  'status' => $status,
+    'type' => $type,
+    'order_id' => $order_id,
+    'status' => $status,
   ));
 }
 
