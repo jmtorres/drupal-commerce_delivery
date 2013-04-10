@@ -75,7 +75,8 @@ function commerce_delivery_views_data() {
       'click sortable' => TRUE,
     ),
     'filter' => array(
-      'handler' => 'commerce_delivery_handler_filter_delivery_status',
+      'handler' => 'views_handler_filter_in_operator',
+      'options callback' => 'commerce_delivery_get_status',
     ),
     'sort' => array(
       'handler' => 'views_handler_sort',
