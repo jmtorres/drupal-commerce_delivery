@@ -675,12 +675,3 @@ function commerce_order_get_property_delivery($order, array $options, $name) {
 function commerce_delivery_ref_default_value($type, $line_item, $f, $i, $lang) {
   return array(array('value' => 0));
 }
-
-
-function commerce_delivery_entity_view($entity, $type, $view_mode, $langcode) {
-  if ($type == 'commerce_order') {
-    $entity->content['commerce_delivery_for_order'] = array(
-      '#markup' => views_embed_view('commerce_delivery_for_order', 'default', $entity->order_id),
-    );
-  }
-}
