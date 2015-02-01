@@ -28,6 +28,14 @@ function commerce_delivery_entity_property_info() {
     'required' => TRUE,
     'schema field' => 'order_id',
   );
+  $properties['type'] = array(
+    'label' => t('Type'),
+    'description' => t('The human readable name of the delivery type.'),
+    'type' => 'token',
+    'setter callback' => 'entity_property_verbatim_set',
+    'required' => TRUE,
+    'schema field' => 'type',
+  );
   $properties['view_url'] = array(
     'label' => t('View URL'),
     'description' => t('The URL a customer can visit to view the delivery.'),

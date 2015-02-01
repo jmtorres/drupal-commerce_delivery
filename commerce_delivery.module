@@ -47,6 +47,9 @@ function commerce_delivery_entity_info() {
         'bundle' => 'type',
         'label' => 'delivery_id',
       ),
+      'bundle keys' => array(
+        'bundle' => 'type',
+      ),
       'bundles' => array(
         'commerce_delivery' => array(
           'label' => 'Delivery',
@@ -123,7 +126,7 @@ function commerce_delivery_uri($delivery) {
  *   The new CommerceDelivery object.
  */
 function commerce_delivery_create($values) {
-  return entity_get_controller('commerce_coupon')->create($values);
+  return entity_get_controller('commerce_delivery')->create($values);
 }
 
 /**
@@ -507,7 +510,7 @@ function commerce_delivery_form_submit($form, &$form_state){
  * Delivery form submit handler for the delete button.
  */
 function commerce_delivery_form_submit_delete($form, &$form_state) {
-  $form_state['redirect'] = 'admin/commerce/deliveries/' . $form['commerce_delivery']->delivery_id . '/delete';
+  $form_state['redirect'] = 'admin/commerce/deliveries/' . $form_state['commerce_delivery']->delivery_id . '/delete';
 }
 
 /**
