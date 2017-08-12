@@ -117,6 +117,14 @@ function commerce_delivery_views_data() {
     ),
   );
 
+  $data['commerce_delivery']['operations'] = array(
+    'field' => array(
+      'title' => t('Operations links'),
+      'help' => t('Display all the available operations links for the delivery.'),
+      'handler' => 'commerce_delivery_handler_field_delivery_operations',
+    ),
+  );
+
   // Expose links to operate on the line item delivery.
   $data['commerce_line_item']['set_delivery'] = array(
     'field' => array(
@@ -161,6 +169,8 @@ function commerce_delivery_views_data() {
 
 /**
  * Implements hook_views_data_alter()
+ *
+ * @param $data
  */
 function commerce_delivery_views_data_alter(&$data) {
   // Define the relationship from commerce_order to commerce_delivery.

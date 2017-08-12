@@ -93,10 +93,12 @@ function commerce_delivery_entity_info() {
  * @param $op
  *   The operation being performed. One of 'view', 'update', 'create' or
  *   'delete'.
- * @param $order
- *   Optionally an order to check access for.
+ * @param delivery
+ *   Optionally a delivery to check access for.
  * @param $account
  *   The user to check for. Leave it to NULL to check for the current user.
+ * 
+ * @return boolean
  */
 function commerce_delivery_access($op, $delivery = NULL, $account = NULL) {
   return commerce_entity_access($op, $delivery, $account, 'commerce_delivery');
@@ -104,6 +106,8 @@ function commerce_delivery_access($op, $delivery = NULL, $account = NULL) {
 
 /**
  * Implementation of hook_query_commerce_order_access_alter().
+ *
+ * @param \QueryAlterableInterface $query
  */
 function commerce_delivery_query_commerce_delivery_access_alter(QueryAlterableInterface $query) {
   commerce_entity_access_query_alter($query, 'commerce_delivery');
@@ -112,6 +116,10 @@ function commerce_delivery_query_commerce_delivery_access_alter(QueryAlterableIn
 
 /**
  * Callback returning delivery url.
+ *
+ * @param $delivery
+ *
+ * @return array
  */
 function commerce_delivery_uri($delivery) {
   return array( 'path' => 'admin/commerce/deliveries/' . $delivery->delivery_id . '/view');
@@ -120,10 +128,10 @@ function commerce_delivery_uri($delivery) {
 /**
  * Create a new delivery object.
  *
- * @param $order_id
+ * @param $values
  *   List of initial object attributes.
- * @return CommerceDelivery
- *   The new CommerceDelivery object.
+ * @return
+ *   The new commerce_delivery object.
  */
 function commerce_delivery_create($values) {
   return entity_get_controller('commerce_delivery')->create($values);
@@ -145,9 +153,16 @@ function commerce_delivery_save($delivery) {
 
 /**
  * Callback for getting order properties.
+ *
  * @see commerce_delivery_entity_property_info()
+ *
+ * @param $delivery
+ * @param array $options
+ * @param $name
+ *
+ * @return string
  */
-function commerce_delivery_get_properties($order, array $options, $name) {
+function commerce_delivery_get_properties($delivery, array $options, $name) {
   switch ($name) {
 //    case 'view-url':
 //      return url('delivery/' . $delivery->delivery_id, $options);
@@ -156,10 +171,15 @@ function commerce_delivery_get_properties($order, array $options, $name) {
     case 'edit-url':
       return url('admin/commerce/deliveries/' . $delivery->delivery_id . '/edit', $options);
   }
+  return NULL;
 }
 
 /**
  * Loads a delivery by ID.
+ *
+ * @param $delivery_id
+ *
+ * @return bool|mixed
  */
 function commerce_delivery_load($delivery_id) {
   $delivery = commerce_delivery_load_multiple(array($delivery_id), array());
@@ -277,14 +297,21 @@ function commerce_delivery_menu() {
   return $items;
 }
 
+/**
+ * @param $delivery
+ * @param string $view_mode
+ * @param bool $breadcrumb
+ * @return bool
+ */
 function commerce_delivery_delivery_view($delivery, $view_mode = 'full', $breadcrumb = TRUE) {
+/*
   // Set the breadcrumb for the appropriate view mode if specified.
   if ($breadcrumb) {
-//    commerce_order_ui_set_breadcrumb();
+    commerce_order_ui_set_breadcrumb();
   }
 
-//  drupal_add_css(drupal_get_path('module', 'commerce_order') . '/theme/commerce_order.theme.css');
-
+  drupal_add_css(drupal_get_path('module', 'commerce_order') . '/theme/commerce_order.theme.css');
+*/
   return entity_view('commerce_delivery', array($delivery->delivery_id => $delivery), $view_mode, NULL, TRUE);
 }
 
@@ -335,6 +362,10 @@ function commerce_delivery_field_extra_fields() {
 
 /**
  * Page callback.
+ *
+ * @param $order
+ *
+ * @return string
  */
 function commerce_delivery_by_order_view($order) {
   $destination = drupal_get_destination();
@@ -362,13 +393,15 @@ function commerce_delivery_move_item($order, $line_item, $delivery) {
   $token = $_REQUEST['token'];
   if ($token != commerce_delivery_get_token($order->order_id, $line_item->line_item_id, $delivery->delivery_id)) {
     drupal_set_message(t('Invalid token.'), 'error');
-    return drupal_access_denied();
+    drupal_access_denied();
+    return;
   }
 
   // Validate that the line item belongs to the order.
   if ($line_item->order_id != $order->order_id) {
     drupal_set_message(t('Invalid parameters.'), 'error');
-    return drupal_access_denied();
+    drupal_access_denied();
+    return;
   }
 
   $wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
@@ -385,15 +418,15 @@ function commerce_delivery_move_item($order, $line_item, $delivery) {
 /**
  * Get a token to protect delivery action links.
  *
- * @param $order
+ * @param $order_id
  *  The order entity.
- * @param $line_item
+ * @param $line_item_id
  *  The line item entity.
- * @param $delivery
+ * @param $delivery_id
  *  The delivery entity.
  *
- * @return
- *  A token string.
+ * @return string A token string.
+ * A token string.
  */
 function commerce_delivery_get_token($order_id, $line_item_id, $delivery_id) {
   return drupal_get_token(implode('-', array('commerce_delivery', $order_id, $line_item_id, $delivery_id)));
@@ -405,7 +438,7 @@ function commerce_delivery_get_token($order_id, $line_item_id, $delivery_id) {
  * @param $order_id
  *   ID of the order which to attach the delivery to
  *
- * @return
+ * @return array
  */
 function commerce_delivery_add($order_id = NULL) {
   // TODO: check order_id
@@ -421,17 +454,11 @@ function commerce_delivery_add($order_id = NULL) {
 /**
  * Helper function that return status values as options.
  *
- * @return
+ * @return array
  *   An array of status labels indexed by their id.
  */
 function commerce_delivery_get_status() {
-  $options_array = variable_get('commerce_delivery_status_options');
-  $options_array = explode("\n", $options_array);
-  foreach ($options_array as $option) {
-    $option = explode('|', $option);
-    $options[$option[0]] = t($option[1]);
-  }
-  return $options;
+  return variable_get_value('commerce_delivery_status_options');
 }
 
 /**
@@ -440,7 +467,7 @@ function commerce_delivery_get_status() {
  * @param $id
  *   id of the status
  *
- * @return
+ * @return string
  *   string containing the human readable title for the specified state. If a state
  *     is specified that does not exist, this function returns FALSE.
  */
@@ -454,6 +481,13 @@ function commerce_delivery_status_get_title($id = NULL) {
   return FALSE;
 }
 
+/**
+ * @param $form
+ * @param $form_state
+ * @param $delivery
+ * @param string $op
+ * @return mixed
+ */
 function commerce_delivery_form($form, &$form_state, $delivery, $op = 'edit'){
   $form_state['commerce_delivery'] = $delivery;
   $form_state['op'] = $op;
@@ -489,10 +523,18 @@ function commerce_delivery_form($form, &$form_state, $delivery, $op = 'edit'){
   return $form;
 }
 
+/**
+ * @param $form
+ * @param $form_state
+ */
 function commerce_delivery_form_validate($form, &$form_state) {
   field_attach_form_validate('commerce_delivery', $form_state['commerce_delivery'], $form, $form_state);
 }
 
+/**
+ * @param $form
+ * @param $form_state
+ */
 function commerce_delivery_form_submit($form, &$form_state){
   $commerce_delivery = &$form_state['commerce_delivery'];
   $commerce_delivery->status = $form_state['values']['status'];
@@ -508,6 +550,9 @@ function commerce_delivery_form_submit($form, &$form_state){
 
 /**
  * Delivery form submit handler for the delete button.
+ *
+ * @param $form
+ * @param $form_state
  */
 function commerce_delivery_form_submit_delete($form, &$form_state) {
   $form_state['redirect'] = 'admin/commerce/deliveries/' . $form_state['commerce_delivery']->delivery_id . '/delete';
@@ -516,8 +561,12 @@ function commerce_delivery_form_submit_delete($form, &$form_state) {
 /**
  * Confirm form for deleting a profile.
  *
+ * @param $form
+ * @param $form_state
  * @param $delivery
  *  A delivery entity.
+ *
+ * @return array
  */
 function commerce_delivery_page_delete_confirm_form($form, &$form_state, $delivery) {
   $form_state['commerce_delivery'] = $delivery;
@@ -530,44 +579,87 @@ function commerce_delivery_page_delete_confirm_form($form, &$form_state, $delive
 
 /**
  * Submit handler for deleting a delivery.
+ *
+ * @param $form
+ * @param $form_state
  */
 function commerce_delivery_page_delete_confirm_form_submit($form, &$form_state) {
   $delivery = $form_state['commerce_delivery'];
-  commerce_delivery_delete($delivery);
-  drupal_set_message(t('Deleted delivery %label.', array('%label' => $delivery->delivery_id)));
+
+  if (commerce_delivery_delete($delivery->delivery_id)) {
+    drupal_set_message(t('Delivery @id has been deleted.', array('@id' => $delivery->delivery_id)));
+    watchdog('commerce_order', 'Deleted delivery @id.', array('@id' => $delivery->delivery_id), WATCHDOG_NOTICE);
+  }
+  else {
+    drupal_set_message(t('Delivery @id could not be deleted.', array('@id' => $delivery->delivery_id)), 'error');
+  }
+
   $form_state['redirect'] = 'admin/commerce/deliveries';
 }
 
 /**
  * Delete a delivery entity.
  *
- * @param $delivery
- *  The delivery entity to delete.
+ * @param $delivery_id
+ *  The delivery entity id to delete.
  */
-function commerce_delivery_delete($delivery) {
-  module_invoke_all('entity_delete', $delivery, 'commerce_delivery');
-  field_attach_delete('commerce_delivery', $delivery);
+function commerce_delivery_delete($delivery_id) {
+  return commerce_delivery_delete_multiple(array($delivery_id));
+}
 
-  db_delete('commerce_delivery')
-    ->condition('delivery_id', $delivery->delivery_id)
-    ->execute();
+function commerce_delivery_delete_multiple($delivery_ids) {
+  return entity_get_controller('commerce_delivery')->delete($delivery_ids);
+}
 
-  entity_get_controller('commerce_delivery')->resetCache();
+function commerce_delivery_variable_info($options) {
+  $variables['commerce_delivery_status_options'] = array(
+    'type' => 'properties',
+    'title' => t('Delivery status options', array(), $options),
+    'description' => t('Supply status options. Format is "id|label". Take note that lower id get priority when assigning items to random deliveries.', array(), $options),
+    'default' => array(
+      0 => 'new',
+      1 => 'pending',
+      2 => 'delivered',
+      3 => 'on hold',
+      4 => 'cancelled',
+    ),
+  );
+  $variables['commerce_delivery_default_status'] = array(
+    'type' => 'select',
+    'title' => t('Delivery default status', array(), $options),
+    'description' => t('Select the default status assigned to a new delivery.', array(), $options),
+    'options_callback' => 'commerce_delivery_get_status',
+    'default' => ''
+  );
+  $variables['commerce_delivery_active_status'] = array(
+    '#type' => 'options',
+    '#title' => t('Active deliveries statuses', array(), $options),
+    '#description' => t('Select in which statuses items can be assigned to a delivery.', array(), $options),
+    'options_callback' => 'commerce_delivery_get_status',
+    'default' => '',
+  );
+  $variables['commerce_delivery_help_text'] = array(
+    'type' => 'string',
+    'title' => t('Delivery creation help text', array(), $options),
+    'description' => t('Supply an optional help message to be displayed above the delivery form.', array(), $options),
+    'default' => '',
+  );
 }
 
 /**
  * Settings form
+ *
+ * @param $form
+ * @param $form_state
+ *
+ * @return array
  */
 function commerce_delivery_settings_form($form, &$form_state) {
-  $form['commerce_delivery_status_options'] = array(
+  /*$form['commerce_delivery_status_options'] = array(
     '#type' => 'textarea',
     '#title' => t('Delivery status options'),
     '#description' => t('Supply status options. Format is "id|label". Take note that lower id get priority when assigning items to random deliveries.'),
-    '#default_value' => variable_get('commerce_delivery_status_options', '0|new
-1|pending
-2|delivered
-3|on hold
-4|cancelled'),
+    '#default_value' => variable_get('commerce_delivery_status_options', "0|new\n1|pending\n2|delivered\n3|on hold\n4|cancelled"),
   );
   $form['commerce_delivery_default_status'] = array(
     '#type' => 'select',
@@ -584,38 +676,14 @@ function commerce_delivery_settings_form($form, &$form_state) {
     '#default_value' => variable_get('commerce_delivery_active_status', ''),
     '#multiple' => TRUE,
   );
-  // Check if a shippable field has been defined
-  $query = db_query('SELECT DISTINCT f.id, f.field_name
-                            FROM {field_config} f RIGHT JOIN {field_config_instance} i ON f.id = i.field_id
-                            WHERE f.type = :type and i.deleted = 0', array(':type' => 'list_boolean'));
-  if ($query->rowCount() ) { // select one
-    $form['commerce_delivery_shippable_field'] = array(
-      '#type' => 'select',
-      '#title' => t('Shippable item field'),
-      '#description' => t('Select the boolean field identifying shippable skus. Every time a new field is selected do not forget to update the affected views: !by_order and !view. Clearing the !cache should be enough if views has not been customized.', array(
-                '!by_order' => l('deliveries by order', 'admin/structure/views/view/commerce_delivery_by_order/edit'),
-                '!view' => l('delivery view', 'admin/structure/views/view/commerce_delivery_view/edit'),
-                '!cache' => l('cache', 'admin/config/development/performance'))),
-      '#options' => $query->fetchAllKeyed(),
-      '#default_value' => variable_get('commerce_delivery_shippable_field', ''),
-    );
-  }
-  else {  // no field exists. ask to add one.
-    $form['commerce_delivery_shippable_field'] = array(
-      '#type' => 'item',
-      '#title' => t('Shippable item field'),
-      '#description' => t('No boolean fields available. Please add at least one to a !product to identify shippable skus.',
-                    array( '!product' => l('product type', 'admin/commerce/products/types'))),
-    );
-    drupal_set_message($form['commerce_delivery_shippable_field']['#description'], 'warning');
-  }
   $form['commerce_delivery_help_text'] = array(
     '#type' => 'textarea',
     '#title' => t('Delivery creation help text'),
     '#description' => t('Supply an optional help message to be displayed above the delivery form.'),
     '#default_value' => variable_get('commerce_delivery_help_text', ''),
   );
-
+*/
+  $form = drupal_get_form('variable_module_form', 'commerce_delivery', $form, $form_state);
   return system_settings_form($form);
 }
 
@@ -635,42 +703,53 @@ function commerce_delivery_views_api() {
  * @param $order_id
  *   The order ID.
  *
- * @param $limit
+ * @param string $limit
  *   'active' for retrieving only deliveries with active status
  *   'all' (default) for everything
  *
- * @return
- *   Array of entity stubs as returned by EntityFieldQuery::execute().
+ * @return mixed Array of entity stubs as returned by EntityFieldQuery::execute().
+ * Array of entity stubs as returned by EntityFieldQuery::execute().
  */
 function commerce_delivery_get_deliveries($order_id, $limit = 'all') {
-  if ($limit == 'active') {
-    $active_status = variable_get('commerce_delivery_active_status', '');
-  }
   $query = new EntityFieldQuery;
   $query->entityCondition('entity_type', 'commerce_delivery')
-        ->propertyCondition('order_id', $order_id);
+        ->propertyCondition('order_id', $order_id)
+        ->propertyOrderBy('status');
+
   if ($limit == 'active') {
-    $query->propertyCondition('status', $active_status);
+    $query->propertyCondition('status', variable_get_value('commerce_delivery_active_status'));
   }
-  $deliveries = $query->propertyOrderBy('status')
-        ->execute();
-  return $deliveries;
+
+  return $query->execute();
 }
 
 /**
  * Getter callback for Entity API metadata.
+ *
+ * @param $order
+ * @param array $options
+ * @param $name
+ *
+ * @return array
  */
 function commerce_order_get_property_delivery($order, array $options, $name) {
   $delivery_stubs = commerce_delivery_get_deliveries($order->order_id);
   if (isset($delivery_stubs['commerce_delivery'])) {
-    $delivery_ids = array_keys($delivery_stubs['commerce_delivery']);
-    return $delivery_ids;
+    return array_keys($delivery_stubs['commerce_delivery']);
   }
   return array();
 }
 
 /**
  * Callback that returns delivery_ref default values
+ *
+ * @param $type
+ * @param $line_item
+ * @param $f
+ * @param $i
+ * @param $lang
+ *
+ * @return array
  */
 function commerce_delivery_ref_default_value($type, $line_item, $f, $i, $lang) {
   return array(array('value' => 0));

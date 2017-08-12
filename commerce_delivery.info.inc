@@ -80,7 +80,10 @@ function commerce_delivery_entity_property_info() {
 
 /**
  * Implements hook_entity_property_info_alter().
+ *
  * @see entity_metadata_entity_property_info_alter()
+ *
+ * @param $info
  */
 function commerce_delivery_entity_property_info_alter(&$info) {
   // Add the delivery ref to the line item.

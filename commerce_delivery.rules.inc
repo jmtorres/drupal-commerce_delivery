@@ -10,6 +10,8 @@
 
 /**
  * Implements hook_rules_event_info().
+ * 
+ * @return array
  */
 function commerce_delivery_rules_event_info() {
   $events = array();
@@ -44,6 +46,7 @@ function commerce_delivery_rules_event_info() {
  * @param $skip_save
  *   Boolean indicating whether or not the primary delivery variable should skip
  *     saving after event execution.
+ * @return array
  */
 function commerce_delivery_rules_event_variables($label, $unchanged = FALSE, $skip_save = FALSE) {
   $variables = array(
@@ -68,20 +71,12 @@ function commerce_delivery_rules_event_variables($label, $unchanged = FALSE, $sk
 
 /**
  * Implements hook_rules_condition_info().
+ * 
+ * @return array
  */
 function commerce_delivery_rules_condition_info() {
   $conditions = array();
 
-  $conditions['commerce_delivery_order_has_shippable_item'] = array(
-    'label' => t('Order has shippable items'),
-    'parameter' => array(
-      'order' => array(
-        'type' => 'commerce_order',
-        'label' => t('Order'),
-      ),
-    ),
-    'group' => t('Delivery'),
-  );
   $conditions['commerce_delivery_order_has_status'] = array(
     'label' => t('Order has status'),
     'parameter' => array(
@@ -95,16 +90,6 @@ function commerce_delivery_rules_condition_info() {
         'options list' => 'commerce_order_status_options_list',
         'description' => 'Select status (multiple allowed).',
         'restriction' => 'input',
-      ),
-    ),
-    'group' => t('Delivery'),
-  );
-  $conditions['commerce_delivery_item_is_shippable'] = array(
-    'label' => t('Line item is shippable'),
-    'parameter' => array(
-      'line_item' => array(
-        'type' => 'commerce_line_item',
-        'label' => t('Line item'),
       ),
     ),
     'group' => t('Delivery'),
@@ -152,22 +137,12 @@ function commerce_delivery_rules_condition_info() {
 
 /**
  * Rules condition callback:
- * checks to see if the given order has shippable items
- */
-function commerce_delivery_order_has_shippable_item($order) {
-  $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
-  $line_items = $order_wrapper->commerce_line_items->value();
-  foreach ($line_items as $item) {
-    if (commerce_delivery_item_is_shippable($item)) {
-      return TRUE;
-    };
-  }
-  return FALSE;
-}
-
-/**
- * Rules condition callback:
  * checks to see if the given order has a selected status
+ * 
+ * @param $order
+ * @param $status_list
+ * 
+ * @return boolean
  */
 function commerce_delivery_order_has_status($order, $status_list) {
   if (in_array($order->status, $status_list)) {
@@ -178,29 +153,15 @@ function commerce_delivery_order_has_status($order, $status_list) {
 
 /**
  * Rules condition callback:
- * checks to see if the given line item is shippable
- *
- * @param $line_item
- *
- * @return
- *   TRUE or FALSE
- */
-function commerce_delivery_item_is_shippable($line_item) {
-  $field_id = variable_get('commerce_delivery_shippable_field', '');
-  $field_info = field_info_field_by_id($field_id);
-  $wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
-  if (isset($wrapper->commerce_product->$field_info['field_name'])) {
-    return $wrapper->commerce_product->$field_info['field_name']->value();
-  }
-  return FALSE;
-}
-
-/**
- * Rules condition callback:
  * checks to see if the given item is in any delivery
+ * 
+ * @param $line_item
+ * 
+ * @return boolean
  */
 function commerce_delivery_item_is_orphan($line_item) {
-  if ($line_item->delivery_ref->value() == 0) {
+  $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
+  if ($line_item_wrapper->delivery_ref->value() == 0) {
     return TRUE;
   }
   return FALSE;
@@ -209,6 +170,10 @@ function commerce_delivery_item_is_orphan($line_item) {
 /**
  * Rules condition callback:
  * checks to see if the given order has delivery with active status
+ * 
+ * @param $order
+ * 
+ * @return boolean
  */
 function commerce_delivery_active_delivery_exists($order) {
   // getting this order deliveries.
@@ -219,6 +184,11 @@ function commerce_delivery_active_delivery_exists($order) {
   return FALSE;
 }
 
+/**
+ * @param $delivery
+ * @param $status_list
+ * @return bool
+ */
 function commerce_delivery_has_status($delivery, $status_list){
   if (in_array($delivery->status, $status_list)) {
     return TRUE;
@@ -228,6 +198,8 @@ function commerce_delivery_has_status($delivery, $status_list){
 
 /**
  * Implements hook_rules_action_info().
+ * 
+ * @return array
  */
 function commerce_delivery_rules_action_info() {
   $actions = array();
@@ -238,6 +210,7 @@ function commerce_delivery_rules_action_info() {
       'line_item' => array(
         'type' => 'commerce_line_item',
         'label' => t('Line item'),
+        'save' => TRUE,
       ),
     ),
     'group' => t('Commerce Line Item'),
@@ -258,6 +231,7 @@ function commerce_delivery_rules_action_info() {
       'commerce_delivery' => array(
         'type' => 'commerce_delivery',
         'label' => t('Delivery to update'),
+        'save' => TRUE,
       ),
       'delivery_status' => array(
         'type' => 'text',
@@ -276,6 +250,8 @@ function commerce_delivery_rules_action_info() {
 /**
  * Rules action callback:
  * assign line items to order default delivery.
+ * 
+ * @param $line_item
  */
 function commerce_delivery_assign_delivery($line_item) {
   // TODO: check if line_item has order_id set
@@ -283,15 +259,16 @@ function commerce_delivery_assign_delivery($line_item) {
   $deliveries = commerce_delivery_get_deliveries($line_item->order_id, 'active');
   // reloading the line item or saving gives error
   $item = current(entity_load('commerce_line_item', array($line_item->line_item_id)));
-  $wrapper = entity_metadata_wrapper('commerce_line_item', $item);
+  $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $item);
   // setting the deliver ref
-  $wrapper->delivery_ref = current($deliveries['commerce_delivery'])->delivery_id;
-  commerce_line_item_save($item);
+  $line_item_wrapper->delivery_ref = current($deliveries['commerce_delivery'])->delivery_id;
 }
 
 /**
  * Rules action callback:
  * assign orphan line items to order default delivery.
+ * 
+ * @param $delivery
  */
 function commerce_delivery_assign_orphans($delivery) {
   // getting shippable items from this order
@@ -299,18 +276,21 @@ function commerce_delivery_assign_orphans($delivery) {
   $order_wrapper = entity_metadata_wrapper('commerce_order', $order);
   $items = $order_wrapper->commerce_line_items->value(); 
   foreach ($items as $line_item) {
-    $wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
     // checking if it's orphan
-    if (commerce_delivery_item_is_orphan($wrapper) && commerce_delivery_item_is_shippable($wrapper)) {
-      $wrapper->delivery_ref = $delivery->delivery_id;
+    if (commerce_delivery_item_is_orphan($line_item) && commerce_physical_line_item_shippable($line_item)) {
+      $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
+      $line_item_wrapper->delivery_ref = $delivery->delivery_id;
       commerce_line_item_save($line_item);
     }
   }
 }
 
+/**
+ * @param $delivery
+ * @param $status
+ */
 function commerce_delivery_rules_update_status($delivery, $status){
   if($delivery->status != $status){
     $delivery->status = $status;
-    commerce_delivery_save($delivery);
   }
 }

@@ -10,13 +10,11 @@ class CommerceDeliveryEntityController extends DrupalCommerceEntityController {
   /**
    * Create a default delivery.
    *
-   * @param $type
-   *   The machine-readable type of the line item.
-   * @param $order_id
-   *   The ID of the order the line item belongs to (if available).
+   * @inheritdoc
    *
-   * @return
-   *   A line item object with all default fields initialized.
+   * @param array $values
+   *
+   * @return object
    */
   public function create(array $values = array()) {
     $values += array(
@@ -31,13 +29,13 @@ class CommerceDeliveryEntityController extends DrupalCommerceEntityController {
     return parent::create($values);
   }
 
-  public function save($delivery) {
+  public function save($delivery, DatabaseTransaction $transaction = NULL) {
     // Set the timestamp fields.
     if (empty($delivery->delivery_id)) {
       $delivery->created = REQUEST_TIME;
     }
     $delivery->changed = REQUEST_TIME;
 
-    return parent::save($delivery);
+    return parent::save($delivery, $transaction);
   }
 }

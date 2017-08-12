@@ -62,6 +62,10 @@ function commerce_delivery_schema() {
 
 /**
  * Implements hook_field_schema().
+ *
+ * @param $field
+ *
+ * @return array
  */
 function commerce_delivery_field_schema($field) {
   return array(
