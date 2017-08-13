@@ -21,7 +21,7 @@ dependencies[] = entity
 dependencies[] = views
 dependencies[] = rules
 dependencies[] = number
-dependencies[] = vasriable
+dependencies[] = variable
 
 configure = admin/commerce/config/delivery
 
